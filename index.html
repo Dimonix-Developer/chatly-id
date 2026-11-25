@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#160821">
+<title>Chatly ID</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;
+ font-family:Arial,sans-serif;color:white;
+ background:
+ radial-gradient(ellipse at 15% 15%,#8c1b9e 0,transparent 40%),
+ radial-gradient(ellipse at 90% 90%,#3512a0 0,transparent 45%),
+ #100817;
+ display:flex;align-items:center;justify-content:center;
+ padding:20px;
+}
+.container{width:100%;max-width:430px}
+.logo{text-align:center;font-size:38px;font-weight:900;margin-bottom:8px}
+.logo span{color:#f04cff}
+.subtitle{text-align:center;color:#d8b5e9;margin-bottom:30px}
+.panel{
+ background:#190d25eF;border:1px solid #a52bce;
+ border-radius:28px;padding:28px;
+ box-shadow:0 0 35px #a020c044;
+}
+h1{text-align:center;font-size:27px;margin:0 0 8px}
+.description{text-align:center;color:#c4a8d1;margin-bottom:25px}
+label{display:block;margin:16px 0 8px;color:#e8c9f5}
+input{
+ width:100%;padding:16px;border-radius:15px;
+ border:1px solid #74418b;background:#100819;
+ color:white;font-size:16px;outline:none;
+}
+input:focus{border-color:#ed42ff;box-shadow:0 0 12px #d52aff55}
+button{
+ width:100%;padding:16px;border:0;border-radius:16px;
+ margin-top:22px;background:linear-gradient(100deg,#ed35e9,#713aff);
+ color:white;font-size:17px;font-weight:bold;cursor:pointer;
+}
+.bottom{text-align:center;color:#b99ac9;font-size:13px;margin-top:22px}
+.status{text-align:center;color:#dcaaff;margin-top:15px;min-height:20px}
+</style>
+</head>
+
+<body>
+<div class="container">
+ <div class="logo">Chatly <span>VI</span></div>
+ <div class="subtitle">Один ID — вся экосистема Chatly</div>
+
+ <div class="panel">
+  <h1>Chatly ID</h1>
+  <div class="description">Твой единый аккаунт</div>
+
+  <label for="chatlyId">Твой Chatly ID</label>
+  <input id="chatlyId" placeholder="Например, Dima_2026">
+
+  <label for="password">Пароль</label>
+  <input id="password" type="password" placeholder="Введи пароль">
+
+  <button id="loginButton">Продолжить →</button>
+  <div class="status" id="status"></div>
+
+  <div class="bottom">
+   Безопасный вход в Chatly<br>
+   Chatly ID · Chatly Guard
+  </div>
+ </div>
+</div>
+</body>
+</html>
