@@ -4,262 +4,553 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#160821">
+<meta name="theme-color" content="#111318">
 <title>Chatly ID</title>
 
 <style>
-*{box-sizing:border-box}
-body{
- margin:0;min-height:100vh;padding:22px;
- display:flex;align-items:center;justify-content:center;
- font-family:Arial,sans-serif;color:white;
- background:
- radial-gradient(ellipse at 15% 10%,#8c1b9e 0,transparent 40%),
- radial-gradient(ellipse at 90% 90%,#3512a0 0,transparent 45%),
- #100817;
+:root {
+  color-scheme: dark;
+  --bg:#111318;
+  --surface:#1e1f25;
+  --surface2:#292a31;
+  --primary:#d0bcff;
+  --on-primary:#381e72;
+  --text:#e4e1e9;
+  --muted:#c5c0cc;
+  --outline:#49454f;
+  --error:#ffb4ab;
 }
-.container{width:100%;max-width:430px}
-.logo{text-align:center;font-size:40px;font-weight:900;margin-bottom:8px}
-.logo span{color:#f04cff}
-.subtitle{text-align:center;color:#d8b5e9;margin-bottom:28px}
-.panel{
- background:#190d25;border:1px solid #a52bce;
- border-radius:28px;padding:26px;
- box-shadow:0 0 35px #a020c044;
+
+body.light {
+  color-scheme:light;
+  --bg:#f6f2fa;
+  --surface:#ffffff;
+  --surface2:#eee8f4;
+  --primary:#6750a4;
+  --on-primary:#ffffff;
+  --text:#1d1b20;
+  --muted:#625d68;
+  --outline:#79747e;
+  --error:#ba1a1a;
 }
-h1{text-align:center;font-size:27px;margin:0 0 8px}
-.description{text-align:center;color:#c4a8d1;margin-bottom:22px}
-.tabs{display:flex;gap:8px;margin-bottom:20px}
-.tabs button{
- flex:1;margin:0;padding:12px;background:#291634;
- color:#d9b8e8;border:1px solid #563368;
+
+* { box-sizing:border-box; }
+
+body {
+  margin:0;
+  min-height:100vh;
+  padding:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Roboto,"Arial",sans-serif;
+  transition:background .25s,color .25s;
 }
-.tabs button.active{background:linear-gradient(100deg,#ed35e9,#713aff);color:white}
-label{display:block;margin:15px 0 8px;color:#e8c9f5}
-input{
- width:100%;padding:15px;border-radius:14px;
- border:1px solid #74418b;background:#100819;
- color:white;font-size:16px;outline:none;
+
+button,input { font:inherit; }
+
+.container {
+  width:100%;
+  max-width:440px;
 }
-input:focus{border-color:#ed42ff;box-shadow:0 0 12px #d52aff55}
-.action{
- width:100%;padding:16px;border:0;border-radius:15px;
- margin-top:22px;background:linear-gradient(100deg,#ed35e9,#713aff);
- color:white;font-size:17px;font-weight:bold;cursor:pointer;
+
+.top {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:32px;
 }
-button:disabled{opacity:.6;cursor:wait}
-.status{text-align:center;color:#e3b3ff;margin-top:15px;min-height:20px;font-size:14px}
-.bottom{text-align:center;color:#b99ac9;font-size:12px;margin-top:22px}
-.hidden{display:none!important}
-.account{text-align:center;overflow-wrap:anywhere}
-.account p{color:#d8b5e9;line-height:1.6}
-.hint{font-size:12px;color:#b99ac9;margin-top:7px}
+
+.logo {
+  font-size:28px;
+  font-weight:800;
+  letter-spacing:-1px;
+}
+
+.logo span { color:var(--primary); }
+
+.theme {
+  width:46px;
+  height:46px;
+  border:0;
+  border-radius:50%;
+  background:var(--surface2);
+  color:var(--text);
+  cursor:pointer;
+  font-size:20px;
+}
+
+.intro {
+  text-align:center;
+  margin-bottom:28px;
+}
+
+.icon {
+  width:76px;
+  height:76px;
+  margin:0 auto 18px;
+  border-radius:26px;
+  display:grid;
+  place-items:center;
+  background:var(--surface2);
+  color:var(--primary);
+  font-size:35px;
+  font-weight:800;
+}
+
+.intro h1 {
+  margin:0 0 9px;
+  font-size:30px;
+  letter-spacing:-1px;
+}
+
+.intro p {
+  margin:0;
+  color:var(--muted);
+  line-height:1.5;
+}
+
+.card {
+  background:var(--surface);
+  border-radius:32px;
+  padding:25px;
+  border:1px solid var(--outline);
+  box-shadow:0 12px 35px #00000018;
+}
+
+.tabs {
+  display:flex;
+  padding:5px;
+  background:var(--surface2);
+  border-radius:50px;
+  margin-bottom:25px;
+}
+
+.tabs button {
+  flex:1;
+  border:0;
+  border-radius:50px;
+  padding:13px 8px;
+  color:var(--muted);
+  background:transparent;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.tabs button.active {
+  background:var(--primary);
+  color:var(--on-primary);
+}
+
+.field { margin-bottom:18px; }
+
+label {
+  display:block;
+  margin-bottom:9px;
+  font-size:14px;
+  font-weight:600;
+}
+
+input {
+  width:100%;
+  min-height:56px;
+  padding:0 17px;
+  border:1px solid var(--outline);
+  border-radius:17px;
+  background:var(--surface2);
+  color:var(--text);
+  outline:none;
+  font-size:16px;
+  transition:border .2s;
+}
+
+input:focus {
+  border:2px solid var(--primary);
+}
+
+input::placeholder { color:var(--muted); }
+
+.hint {
+  color:var(--muted);
+  font-size:12px;
+  margin-top:8px;
+  line-height:1.4;
+}
+
+.action {
+  width:100%;
+  min-height:56px;
+  border:0;
+  border-radius:50px;
+  background:var(--primary);
+  color:var(--on-primary);
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:8px;
+  transition:transform .15s,opacity .15s;
+}
+
+.action:active { transform:scale(.98); }
+button:disabled { opacity:.55; cursor:wait; }
+
+.status {
+  min-height:22px;
+  margin-top:17px;
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+
+.status.error { color:var(--error); }
+
+.footer {
+  text-align:center;
+  margin-top:22px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.account { text-align:center; }
+.account h2 { margin-top:0; }
+.account p { color:var(--muted); line-height:1.6; }
+
+.account-icon {
+  width:68px;
+  height:68px;
+  margin:0 auto 18px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:var(--surface2);
+  color:var(--primary);
+  font-size:30px;
+}
+
+.hidden { display:none!important; }
+
+@media(max-width:420px) {
+  body { padding:17px; }
+  .card { padding:21px; }
+  .intro h1 { font-size:27px; }
+}
 </style>
 </head>
 
 <body>
 <div class="container">
- <div class="logo">Chatly <span>VI</span></div>
- <div class="subtitle">Один ID — вся экосистема Chatly</div>
 
- <div class="panel">
-  <div id="authPanel">
-   <h1>Chatly ID</h1>
-   <div class="description">Твой единый аккаунт</div>
+  <div class="top">
+    <div class="logo">Chatly <span>ID</span></div>
+    <button class="theme" id="themeButton" type="button"
+      aria-label="Переключить тему">☀</button>
+  </div>
 
-   <div class="tabs">
-    <button class="active" id="loginTab" type="button">Вход</button>
-    <button id="registerTab" type="button">Регистрация</button>
-   </div>
+  <div class="intro">
+    <div class="icon">C</div>
+    <h1>Твой мир Chatly</h1>
+    <p>Один аккаунт для всей экосистемы Chatly</p>
+  </div>
 
-   <form id="authForm">
-    <div id="usernameField" class="hidden">
-     <label for="username">Придумай Chatly ID</label>
-     <input id="username" maxlength="20"
-       placeholder="Например, Dima_2026"
-       autocomplete="username">
-     <div class="hint">3–20 символов: латинские буквы, цифры и _</div>
+  <div class="card">
+
+    <div id="authPanel">
+      <div class="tabs">
+        <button id="loginTab" class="active" type="button">Вход</button>
+        <button id="registerTab" type="button">Регистрация</button>
+      </div>
+
+      <form id="authForm">
+        <div class="field hidden" id="usernameField">
+          <label for="username">Твой Chatly ID</label>
+          <input id="username" maxlength="20"
+            placeholder="Например, Dima_2026"
+            autocomplete="username">
+          <div class="hint">
+            3–20 символов: латинские буквы, цифры и _
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" required
+            placeholder="name@example.com"
+            autocomplete="email">
+        </div>
+
+        <div class="field">
+          <label for="password">Пароль</label>
+          <input id="password" type="password" required
+            minlength="6" placeholder="Не менее 6 символов"
+            autocomplete="current-password">
+        </div>
+
+        <button class="action" id="submitButton" type="submit">
+          Войти в Chatly
+        </button>
+      </form>
+
+      <div class="status" id="status" aria-live="polite"></div>
     </div>
 
-    <label for="email">Email</label>
-    <input id="email" type="email" required
-      placeholder="name@example.com" autocomplete="email">
+    <div id="accountPanel" class="hidden account">
+      <div class="account-icon">✓</div>
+      <h2>Добро пожаловать!</h2>
+      <p>Ты вошёл в свой Chatly ID.</p>
+      <p id="accountEmail"></p>
+      <button class="action" id="logoutButton" type="button">
+        Выйти из аккаунта
+      </button>
+    </div>
 
-    <label for="password">Пароль</label>
-    <input id="password" type="password" required
-      minlength="6" placeholder="Не менее 6 символов"
-      autocomplete="current-password">
-
-    <button class="action" id="submitButton" type="submit">
-     Войти в Chatly ID →
-    </button>
-   </form>
-
-   <div class="status" id="status" aria-live="polite"></div>
-   <div class="bottom">Chatly ID · Chatly Guard</div>
   </div>
 
-  <div id="accountPanel" class="hidden account">
-   <h1>Ты в Chatly ID!</h1>
-   <p>Авторизация прошла успешно.</p>
-   <p id="accountEmail"></p>
-   <button class="action" id="logoutButton">Выйти</button>
+  <div class="footer">
+    Chatly ID · Единый аккаунт Chatly
   </div>
- </div>
+
 </div>
+
+<script>
+const themeButton = document.getElementById("themeButton");
+
+function setTheme(theme) {
+  document.body.classList.toggle("light", theme === "light");
+  themeButton.textContent = theme === "light" ? "☾" : "☀";
+  document.querySelector('meta[name="theme-color"]')
+    .setAttribute("content", theme === "light" ? "#f6f2fa" : "#111318");
+}
+
+let savedTheme = "dark";
+try {
+  savedTheme = localStorage.getItem("chatly-id-theme") || "dark";
+} catch {}
+
+setTheme(savedTheme);
+
+themeButton.addEventListener("click", () => {
+  const next = document.body.classList.contains("light")
+    ? "dark" : "light";
+  setTheme(next);
+  try {
+    localStorage.setItem("chatly-id-theme", next);
+  } catch {}
+});
+</script>
 
 <script type="module">
 import { initializeApp }
- from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 
 import {
- getAuth, createUserWithEmailAndPassword,
- signInWithEmailAndPassword, onAuthStateChanged,
- signOut, deleteUser
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  deleteUser
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 import {
- getFirestore, doc, runTransaction, serverTimestamp
+  getFirestore,
+  doc,
+  runTransaction,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-// Конфигурация нового приложения Chatly ID
 const firebaseConfig = {
- apiKey: "AIzaSyD3Er2iVY6H5Gvj3YdF6Cj34EJXIXyEiiU",
- authDomain: "chatly-19613.firebaseapp.com",
- projectId: "chatly-19613",
- storageBucket: "chatly-19613.firebasestorage.app",
- messagingSenderId: "1080401916394",
- appId: "1:1080401916394:web:a7fb0c1c5807d0744c8293",
- measurementId: "G-N7J83W8FK7"
+  apiKey: "AIzaSyD3Er2iVY6H5Gvj3YdF6Cj34EJXIXyEiiU",
+  authDomain: "chatly-19613.firebaseapp.com",
+  projectId: "chatly-19613",
+  storageBucket: "chatly-19613.firebasestorage.app",
+  messagingSenderId: "1080401916394",
+  appId: "1:1080401916394:web:a7fb0c1c5807d0744c8293",
+  measurementId: "G-N7J83W8FK7"
 };
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 
 const $ = id => document.getElementById(id);
 
+let auth;
+let db;
 let mode = "login";
+let authOperationInProgress = false;
 
-function message(text){
- $("status").textContent = text;
+function message(text, error = false) {
+  $("status").textContent = text;
+  $("status").classList.toggle("error", error);
 }
 
-function setMode(next){
- mode = next;
- $("loginTab").classList.toggle("active",mode==="login");
- $("registerTab").classList.toggle("active",mode==="register");
- $("usernameField").classList.toggle("hidden",mode!=="register");
- $("submitButton").textContent =
-  mode==="login" ? "Войти в Chatly ID →" : "Создать Chatly ID →";
- $("password").autocomplete =
-  mode==="login" ? "current-password" : "new-password";
- message("");
+function showAccount(user) {
+  $("authPanel").classList.add("hidden");
+  $("accountPanel").classList.remove("hidden");
+  $("accountEmail").textContent = user.email || "";
+}
+
+function showAuth() {
+  $("accountPanel").classList.add("hidden");
+  $("authPanel").classList.remove("hidden");
+}
+
+function setMode(next) {
+  mode = next;
+
+  $("loginTab").classList.toggle("active", mode === "login");
+  $("registerTab").classList.toggle("active", mode === "register");
+  $("usernameField").classList.toggle("hidden", mode !== "register");
+  $("username").required = mode === "register";
+
+  $("submitButton").textContent =
+    mode === "login" ? "Войти в Chatly" : "Создать Chatly ID";
+
+  $("password").autocomplete =
+    mode === "login" ? "current-password" : "new-password";
+
+  message("");
 }
 
 $("loginTab").onclick = () => setMode("login");
 $("registerTab").onclick = () => setMode("register");
 
-function showAccount(user){
- $("authPanel").classList.add("hidden");
- $("accountPanel").classList.remove("hidden");
- $("accountEmail").textContent = "Email: " + user.email;
+function readableError(error) {
+  const errors = {
+    "auth/api-key-not-valid":
+      "Firebase не принимает API-ключ. Нужно проверить настройки ключа.",
+    "auth/invalid-api-key":
+      "API-ключ Firebase указан неверно.",
+    "auth/email-already-in-use":
+      "Этот Email уже зарегистрирован.",
+    "auth/invalid-email":
+      "Проверь правильность Email.",
+    "auth/weak-password":
+      "Пароль должен содержать минимум 6 символов.",
+    "auth/invalid-credential":
+      "Неверный Email или пароль.",
+    "auth/too-many-requests":
+      "Слишком много попыток. Попробуй позже.",
+    "auth/network-request-failed":
+      "Проверь подключение к Интернету.",
+    "permission-denied":
+      "Firebase запретил операцию. Нужно проверить правила Firestore."
+  };
+
+  return errors[error.code] || error.message || "Неизвестная ошибка.";
 }
 
-function showAuth(){
- $("accountPanel").classList.add("hidden");
- $("authPanel").classList.remove("hidden");
+try {
+  const app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  auth.languageCode = "ru";
+
+  onAuthStateChanged(auth, user => {
+    if (authOperationInProgress) return;
+    if (user) showAccount(user);
+    else showAuth();
+  });
+
+} catch (error) {
+  message("Не удалось запустить Firebase: " + readableError(error), true);
 }
 
-onAuthStateChanged(auth,user=>{
- if(user) showAccount(user);
- else showAuth();
-});
+$("authForm").addEventListener("submit", async event => {
+  event.preventDefault();
 
-function readableError(error){
- const errors = {
-  "auth/email-already-in-use":"Этот Email уже зарегистрирован.",
-  "auth/invalid-email":"Проверь правильность Email.",
-  "auth/weak-password":"Пароль должен содержать минимум 6 символов.",
-  "auth/invalid-credential":"Неверный Email или пароль.",
-  "auth/too-many-requests":"Слишком много попыток. Попробуй позже.",
-  "permission-denied":"Firebase запретил операцию. Проверь правила доступа."
- };
- return errors[error.code] || error.message || "Неизвестная ошибка.";
-}
-
-$("authForm").addEventListener("submit",async event=>{
- event.preventDefault();
-
- const email = $("email").value.trim();
- const password = $("password").value;
- const button = $("submitButton");
-
- button.disabled = true;
- message("Подключаемся...");
-
- try{
-  if(mode==="login"){
-   await signInWithEmailAndPassword(auth,email,password);
-   message("Вход выполнен!");
-  }else{
-   const username = $("username").value.trim();
-   const normalized = username.toLowerCase();
-
-   if(!/^[A-Za-z0-9_]{3,20}$/.test(username)){
-    throw new Error("Chatly ID: 3–20 символов, только латинские буквы, цифры и _.");
-   }
-
-   if(password.length<6){
-    throw new Error("Пароль должен содержать минимум 6 символов.");
-   }
-
-   const credential =
-    await createUserWithEmailAndPassword(auth,email,password);
-
-   try{
-    await runTransaction(db,async transaction=>{
-     const usernameRef = doc(db,"usernames",normalized);
-     const userRef = doc(db,"users",credential.user.uid);
-
-     const existing = await transaction.get(usernameRef);
-
-     if(existing.exists()){
-      throw new Error("Это имя Chatly ID уже занято.");
-     }
-
-     transaction.set(usernameRef,{
-      uid:credential.user.uid
-     });
-
-     transaction.set(userRef,{
-      username:username,
-      createdAt:serverTimestamp(),
-      verified:false,
-      badges:[]
-     });
-    });
-
-    message("Chatly ID успешно создан!");
-   }catch(error){
-    await deleteUser(credential.user);
-    throw error;
-   }
+  if (!auth || !db) {
+    message("Firebase не подключён. Проверь конфигурацию.", true);
+    return;
   }
- }catch(error){
-  message(readableError(error));
- }finally{
-  button.disabled = false;
- }
+
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  const button = $("submitButton");
+
+  authOperationInProgress = true;
+  button.disabled = true;
+  message("Подключаемся к Chatly...");
+
+  try {
+    if (mode === "login") {
+      const credential =
+        await signInWithEmailAndPassword(auth, email, password);
+
+      showAccount(credential.user);
+      message("");
+
+    } else {
+      const username = $("username").value.trim();
+      const normalized = username.toLowerCase();
+
+      if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
+        throw new Error(
+          "Chatly ID должен содержать 3–20 символов: латинские буквы, цифры и _."
+        );
+      }
+
+      if (password.length < 6) {
+        throw new Error("Пароль должен содержать минимум 6 символов.");
+      }
+
+      const credential =
+        await createUserWithEmailAndPassword(auth, email, password);
+
+      try {
+        await runTransaction(db, async transaction => {
+          const usernameRef = doc(db, "usernames", normalized);
+          const userRef = doc(db, "users", credential.user.uid);
+
+          const existing = await transaction.get(usernameRef);
+
+          if (existing.exists()) {
+            throw new Error("Этот Chatly ID уже занят.");
+          }
+
+          transaction.set(usernameRef, {
+            uid: credential.user.uid
+          });
+
+          transaction.set(userRef, {
+            username: username,
+            createdAt: serverTimestamp(),
+            verified: false,
+            badges: []
+          });
+        });
+
+        showAccount(credential.user);
+        message("");
+
+      } catch (error) {
+        await deleteUser(credential.user);
+        throw error;
+      }
+    }
+
+  } catch (error) {
+    message(readableError(error), true);
+
+  } finally {
+    authOperationInProgress = false;
+    button.disabled = false;
+
+    if (auth?.currentUser && !$("accountPanel").classList.contains("hidden")) {
+      showAccount(auth.currentUser);
+    } else if (!auth?.currentUser) {
+      showAuth();
+    }
+  }
 });
 
-$("logoutButton").onclick = async ()=>{
- try{
-  await signOut(auth);
-  message("Ты вышел из аккаунта.");
- }catch(error){
-  alert(readableError(error));
- }
+$("logoutButton").onclick = async () => {
+  try {
+    await signOut(auth);
+    message("Ты вышел из аккаунта.");
+  } catch (error) {
+    alert(readableError(error));
+  }
 };
 </script>
 </body>
