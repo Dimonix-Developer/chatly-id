@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -95,6 +96,12 @@ input::placeholder {color:var(--muted)}
 }
 .action:active,.social-button:active {transform:scale(.98)}
 button:disabled {opacity:.55;cursor:not-allowed}
+.secondary-action {
+  width:100%;min-height:52px;border:1px solid var(--outline);
+  border-radius:50px;background:var(--surface2);
+  color:var(--text);font-size:15px;font-weight:600;
+  cursor:pointer;margin-top:10px;
+}
 .text-button {
   display:block;width:100%;border:0;background:transparent;
   color:var(--primary);padding:13px 8px;margin-top:5px;
@@ -194,6 +201,7 @@ button:disabled {opacity:.55;cursor:not-allowed}
   </div>
 
   <div class="card">
+
     <div id="authPanel">
       <div class="tabs">
         <button id="loginTab" class="active" type="button">Вход</button>
@@ -240,10 +248,45 @@ button:disabled {opacity:.55;cursor:not-allowed}
       <p>Ты вошёл в свой Chatly ID.</p>
       <p id="accountEmail"></p>
 
-      <button class="action hidden" id="addPasswordButton" type="button">Добавить пароль</button>
+      <button class="action hidden" id="addPasswordButton" type="button">
+        Добавить пароль
+      </button>
+
+      <div id="addPasswordForm" class="hidden">
+        <div class="field">
+          <label for="newAccountPassword">Новый пароль</label>
+          <input id="newAccountPassword" type="password"
+                 minlength="6" autocomplete="new-password"
+                 placeholder="Минимум 6 символов">
+        </div>
+
+        <div class="field">
+          <label for="confirmAccountPassword">Повтори пароль</label>
+          <input id="confirmAccountPassword" type="password"
+                 minlength="6" autocomplete="new-password"
+                 placeholder="Повтори новый пароль">
+        </div>
+
+        <button class="action" id="savePasswordButton" type="button">
+          Сохранить пароль
+        </button>
+
+        <button class="secondary-action" id="cancelPasswordButton" type="button">
+          Отмена
+        </button>
+      </div>
+
       <div class="status" id="accountStatus" aria-live="polite"></div>
-      <button class="action" id="logoutButton" type="button">Выйти из аккаунта</button>
+
+      <button class="action hidden" id="continueButton" type="button">
+        Продолжить в Chatly
+      </button>
+
+      <button class="secondary-action" id="logoutButton" type="button">
+        Выйти из аккаунта
+      </button>
     </div>
+
   </div>
 
   <div class="footer">Chatly ID · Единый аккаунт Chatly</div>
@@ -288,7 +331,10 @@ import {
   deleteUser,
   GoogleAuthProvider,
   signInWithPopup,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  EmailAuthProvider,
+  linkWithCredential,
+  reload
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 import {
@@ -369,18 +415,31 @@ function accountMessage(text, error = false) {
   $("accountStatus").classList.toggle("error", error);
 }
 
+function hasPasswordProvider(user) {
+  return user.providerData.some(
+    provider => provider.providerId === "password"
+  );
+}
+
 function showAccount(user) {
   $("authPanel").classList.add("hidden");
   $("accountPanel").classList.remove("hidden");
   $("accountEmail").textContent = user.email || "Google-аккаунт";
 
-  const hasPassword = user.providerData.some(
-    provider => provider.providerId === "password"
-  );
+  const hasPassword = hasPasswordProvider(user);
 
   $("addPasswordButton").classList.toggle(
     "hidden", hasPassword || !user.email
   );
+
+  $("addPasswordForm").classList.add("hidden");
+
+  $("continueButton").classList.toggle(
+    "hidden", !chatlyReturnUrl
+  );
+
+  $("newAccountPassword").value = "";
+  $("confirmAccountPassword").value = "";
 
   accountMessage("");
 }
@@ -428,11 +487,14 @@ function readableError(error) {
     "auth/popup-blocked":"Браузер заблокировал окно входа. Разреши всплывающие окна.",
     "auth/cancelled-popup-request":"Запрос входа был отменён.",
     "auth/unauthorized-domain":"Домен сайта не добавлен в Firebase Authorized domains.",
-    "auth/account-exists-with-different-credential":"Этот Email уже используется другим способом входа. Попробуй войти прежним способом.",
+    "auth/account-exists-with-different-credential":"Этот Email уже используется другим способом входа.",
     "auth/user-not-found":"Аккаунт с таким Email не найден.",
     "auth/missing-email":"Сначала введи Email.",
-    "auth/invalid-action-code":"Ссылка недействительна или уже использована. Запроси новое письмо.",
-    "permission-denied":"Firebase запретил операцию. Нужно проверить правила Firestore."
+    "auth/invalid-action-code":"Ссылка недействительна или уже использована.",
+    "auth/provider-already-linked":"Пароль уже подключён к этому аккаунту.",
+    "auth/credential-already-in-use":"Этот Email уже связан с другим аккаунтом Firebase.",
+    "auth/requires-recent-login":"Выйди и войди в аккаунт заново, затем повтори попытку.",
+    "permission-denied":"Firebase запретил операцию. Проверь правила Firestore."
   };
 
   return errors[error.code] || error.message || "Неизвестная ошибка.";
@@ -449,8 +511,9 @@ try {
     if (user) {
       showAccount(user);
 
-      // Если пользователь уже вошёл, возвращаем его в основной Chatly
-      if (!authOperationInProgress) {
+      // Google-аккаунт без пароля остаётся на странице,
+      // чтобы пользователь мог добавить пароль.
+      if (!authOperationInProgress && hasPasswordProvider(user)) {
         finishInitialCheck();
         returnToChatly();
       }
@@ -588,7 +651,11 @@ $("googleLoginButton").onclick = async () => {
 
     showAccount(result.user);
     message("");
-    returnToChatly();
+
+    // Если пароля ещё нет, остаёмся на странице.
+    if (hasPasswordProvider(result.user)) {
+      returnToChatly();
+    }
 
   } catch (error) {
     console.error("Google login error:", error);
@@ -596,6 +663,77 @@ $("googleLoginButton").onclick = async () => {
 
   } finally {
     authOperationInProgress = false;
+    button.disabled = false;
+  }
+};
+
+/* Открыть форму добавления пароля */
+$("addPasswordButton").onclick = () => {
+  $("addPasswordButton").classList.add("hidden");
+  $("addPasswordForm").classList.remove("hidden");
+  $("newAccountPassword").focus();
+  accountMessage("Придумай новый пароль для входа через Email.");
+};
+
+/* Отмена добавления пароля */
+$("cancelPasswordButton").onclick = () => {
+  $("addPasswordForm").classList.add("hidden");
+  $("addPasswordButton").classList.remove("hidden");
+  $("newAccountPassword").value = "";
+  $("confirmAccountPassword").value = "";
+  accountMessage("");
+};
+
+/* Настоящее подключение Email/Password к Google-аккаунту */
+$("savePasswordButton").onclick = async () => {
+  const user = auth?.currentUser;
+
+  if (!user || !user.email) {
+    accountMessage("Не удалось определить аккаунт. Войди заново.", true);
+    return;
+  }
+
+  if (hasPasswordProvider(user)) {
+    showAccount(user);
+    accountMessage("У этого аккаунта уже есть пароль.");
+    return;
+  }
+
+  const password = $("newAccountPassword").value;
+  const confirmation = $("confirmAccountPassword").value;
+
+  if (password.length < 6) {
+    accountMessage("Пароль должен содержать минимум 6 символов.", true);
+    return;
+  }
+
+  if (password !== confirmation) {
+    accountMessage("Пароли не совпадают. Проверь оба поля.", true);
+    return;
+  }
+
+  const button = $("savePasswordButton");
+  button.disabled = true;
+  accountMessage("Подключаем пароль к аккаунту...");
+
+  try {
+    const credential = EmailAuthProvider.credential(
+      user.email,
+      password
+    );
+
+    const result = await linkWithCredential(user, credential);
+
+    await reload(result.user);
+
+    showAccount(auth.currentUser);
+    accountMessage("Пароль успешно добавлен! Теперь можно входить через Google или Email и пароль.");
+
+  } catch (error) {
+    console.error("Link password error:", error);
+    accountMessage(readableError(error), true);
+
+  } finally {
     button.disabled = false;
   }
 };
@@ -636,41 +774,9 @@ $("forgotPasswordButton").onclick = async () => {
   }
 };
 
-/* Добавить пароль Google-аккаунту */
-$("addPasswordButton").onclick = async () => {
-  const user = auth?.currentUser;
-
-  if (!user || !user.email) {
-    accountMessage("Не удалось определить Email аккаунта.", true);
-    return;
-  }
-
-  const hasPassword = user.providerData.some(
-    provider => provider.providerId === "password"
-  );
-
-  if (hasPassword) {
-    accountMessage("У этого аккаунта уже есть пароль.");
-    $("addPasswordButton").classList.add("hidden");
-    return;
-  }
-
-  const button = $("addPasswordButton");
-  button.disabled = true;
-  accountMessage("Отправляем письмо для установки пароля...");
-
-  try {
-    await sendPasswordResetEmail(auth, user.email);
-    accountMessage(
-      "Письмо отправлено на " + user.email +
-      ". Открой его и перейди по ссылке, чтобы установить пароль. Проверь также папку «Спам»."
-    );
-  } catch (error) {
-    console.error("Add password error:", error);
-    accountMessage(readableError(error), true);
-  } finally {
-    button.disabled = false;
-  }
+/* Вернуться в основной Chatly */
+$("continueButton").onclick = () => {
+  returnToChatly();
 };
 
 /* Выход */
