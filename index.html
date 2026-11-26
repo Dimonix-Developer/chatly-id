@@ -45,7 +45,7 @@ body {
   justify-content:center;
   background:var(--bg);
   color:var(--text);
-  font-family:Roboto,"Arial",sans-serif;
+  font-family:Roboto,Arial,sans-serif;
   transition:background .25s,color .25s;
 }
 
@@ -54,6 +54,14 @@ button,input { font:inherit; }
 .container {
   width:100%;
   max-width:440px;
+  opacity:0;
+  transform:translateY(12px);
+  transition:opacity .5s ease,transform .5s ease;
+}
+
+body.ready .container {
+  opacity:1;
+  transform:translateY(0);
 }
 
 .top {
@@ -166,10 +174,7 @@ input {
   transition:border .2s;
 }
 
-input:focus {
-  border:2px solid var(--primary);
-}
-
+input:focus { border:2px solid var(--primary); }
 input::placeholder { color:var(--muted); }
 
 .hint {
@@ -233,15 +238,108 @@ button:disabled { opacity:.55; cursor:wait; }
 
 .hidden { display:none!important; }
 
+/* Экран загрузки */
+.loader-screen {
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  background:var(--bg);
+  transition:opacity .45s ease,visibility .45s ease;
+}
+
+.loader-screen.done {
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.loader-logo {
+  width:86px;
+  height:86px;
+  border-radius:29px;
+  display:grid;
+  place-items:center;
+  background:var(--surface2);
+  color:var(--primary);
+  font-size:43px;
+  font-weight:800;
+  animation:logoPulse 1.5s ease-in-out infinite;
+  box-shadow:0 0 45px #d0bcff20;
+}
+
+.loader-title {
+  margin-top:22px;
+  font-size:27px;
+  font-weight:800;
+  letter-spacing:-1px;
+}
+
+.loader-title span { color:var(--primary); }
+
+.loader-caption {
+  margin-top:9px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.loader-track {
+  width:145px;
+  height:4px;
+  margin-top:27px;
+  border-radius:10px;
+  background:var(--surface2);
+  overflow:hidden;
+}
+
+.loader-progress {
+  width:40%;
+  height:100%;
+  border-radius:10px;
+  background:var(--primary);
+  animation:loading 1.2s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% { transform:translateX(-110%); }
+  100% { transform:translateX(360%); }
+}
+
+@keyframes logoPulse {
+  0%,100% { transform:scale(1); }
+  50% { transform:scale(1.06); }
+}
+
 @media(max-width:420px) {
   body { padding:17px; }
   .card { padding:21px; }
   .intro h1 { font-size:27px; }
 }
+
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    animation-duration:.01ms!important;
+    transition-duration:.01ms!important;
+  }
+}
 </style>
 </head>
 
 <body>
+
+<!-- Загрузочный экран -->
+<div class="loader-screen" id="loaderScreen">
+  <div class="loader-logo">C</div>
+  <div class="loader-title">Chatly <span>ID</span></div>
+  <div class="loader-caption">Подготавливаем твой аккаунт...</div>
+  <div class="loader-track">
+    <div class="loader-progress"></div>
+  </div>
+</div>
+
 <div class="container">
 
   <div class="top">
@@ -321,11 +419,16 @@ const themeButton = document.getElementById("themeButton");
 function setTheme(theme) {
   document.body.classList.toggle("light", theme === "light");
   themeButton.textContent = theme === "light" ? "☾" : "☀";
+
   document.querySelector('meta[name="theme-color"]')
-    .setAttribute("content", theme === "light" ? "#f6f2fa" : "#111318");
+    .setAttribute(
+      "content",
+      theme === "light" ? "#f6f2fa" : "#111318"
+    );
 }
 
 let savedTheme = "dark";
+
 try {
   savedTheme = localStorage.getItem("chatly-id-theme") || "dark";
 } catch {}
@@ -335,7 +438,9 @@ setTheme(savedTheme);
 themeButton.addEventListener("click", () => {
   const next = document.body.classList.contains("light")
     ? "dark" : "light";
+
   setTheme(next);
+
   try {
     localStorage.setItem("chatly-id-theme", next);
   } catch {}
@@ -362,8 +467,13 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
+/*
+  ВАЖНО:
+  API-ключ скопирован из конфигурации Firebase,
+  которую ты прислал.
+*/
 const firebaseConfig = {
- apiKey: "AIzaSyD3Er2iVYH6G5vj3YdF6Cj34EJXIXyEiiU",
+  apiKey: "AIzaSyD3Er2iVYH6G5vj3YdF6Cj34EJXIXyEiiU",
   authDomain: "chatly-19613.firebaseapp.com",
   projectId: "chatly-19613",
   storageBucket: "chatly-19613.firebasestorage.app",
@@ -378,6 +488,19 @@ let auth;
 let db;
 let mode = "login";
 let authOperationInProgress = false;
+let firstAuthCheckFinished = false;
+
+function hideLoader() {
+  $("loaderScreen").classList.add("done");
+  document.body.classList.add("ready");
+}
+
+function finishInitialCheck() {
+  if (firstAuthCheckFinished) return;
+
+  firstAuthCheckFinished = true;
+  hideLoader();
+}
 
 function message(text, error = false) {
   $("status").textContent = text;
@@ -418,7 +541,7 @@ $("registerTab").onclick = () => setMode("register");
 function readableError(error) {
   const errors = {
     "auth/api-key-not-valid":
-      "Firebase не принимает API-ключ. Нужно проверить настройки ключа.",
+      "Firebase не принимает API-ключ. Проверь конфигурацию Firebase.",
     "auth/invalid-api-key":
       "API-ключ Firebase указан неверно.",
     "auth/email-already-in-use":
@@ -440,22 +563,51 @@ function readableError(error) {
   return errors[error.code] || error.message || "Неизвестная ошибка.";
 }
 
+/* Подключение Firebase */
 try {
   const app = initializeApp(firebaseConfig);
+
   auth = getAuth(app);
   db = getFirestore(app);
+
   auth.languageCode = "ru";
 
-  onAuthStateChanged(auth, user => {
-    if (authOperationInProgress) return;
-    if (user) showAccount(user);
-    else showAuth();
-  });
+  onAuthStateChanged(
+    auth,
+    user => {
+      if (user) {
+        showAccount(user);
+      } else {
+        showAuth();
+      }
+
+      if (!authOperationInProgress) {
+        finishInitialCheck();
+      }
+    },
+    error => {
+      message("Ошибка проверки аккаунта: " + readableError(error), true);
+      finishInitialCheck();
+    }
+  );
+
+  /* Защита от бесконечного экрана загрузки */
+  setTimeout(() => {
+    if (!firstAuthCheckFinished) {
+      message(
+        "Firebase долго отвечает. Проверь подключение к Интернету.",
+        true
+      );
+      finishInitialCheck();
+    }
+  }, 12000);
 
 } catch (error) {
   message("Не удалось запустить Firebase: " + readableError(error), true);
+  finishInitialCheck();
 }
 
+/* Вход и регистрация */
 $("authForm").addEventListener("submit", async event => {
   event.preventDefault();
 
@@ -524,19 +676,26 @@ $("authForm").addEventListener("submit", async event => {
         message("");
 
       } catch (error) {
-        await deleteUser(credential.user);
+        try {
+          await deleteUser(credential.user);
+        } catch (deleteError) {
+          console.error("Не удалось удалить незавершённый аккаунт:", deleteError);
+        }
+
         throw error;
       }
     }
 
   } catch (error) {
+    console.error("Chatly ID error:", error);
     message(readableError(error), true);
 
   } finally {
     authOperationInProgress = false;
     button.disabled = false;
 
-    if (auth?.currentUser && !$("accountPanel").classList.contains("hidden")) {
+    if (auth?.currentUser &&
+        !$("accountPanel").classList.contains("hidden")) {
       showAccount(auth.currentUser);
     } else if (!auth?.currentUser) {
       showAuth();
@@ -544,14 +703,16 @@ $("authForm").addEventListener("submit", async event => {
   }
 });
 
+/* Выход */
 $("logoutButton").onclick = async () => {
   try {
     await signOut(auth);
     message("Ты вышел из аккаунта.");
   } catch (error) {
-    alert(readableError(error));
+    message(readableError(error), true);
   }
 };
 </script>
+
 </body>
 </html>
