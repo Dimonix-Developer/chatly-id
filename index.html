@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -200,6 +201,19 @@ input::placeholder { color:var(--muted); }
 .action:active { transform:scale(.98); }
 button:disabled { opacity:.55; cursor:not-allowed; }
 
+.text-button {
+  display:block;
+  width:100%;
+  border:0;
+  background:transparent;
+  color:var(--primary);
+  padding:13px 8px;
+  margin-top:5px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+}
+
 .social-login {
   display:grid;
   gap:12px;
@@ -223,9 +237,7 @@ button:disabled { opacity:.55; cursor:not-allowed; }
   transition:transform .15s,background .2s;
 }
 
-.social-button:active {
-  transform:scale(.98);
-}
+.social-button:active { transform:scale(.98); }
 
 .google-icon {
   font-size:21px;
@@ -233,9 +245,7 @@ button:disabled { opacity:.55; cursor:not-allowed; }
   color:#4285F4;
 }
 
-.apple-icon {
-  font-size:20px;
-}
+.apple-icon { font-size:20px; }
 
 .apple-button {
   opacity:.55;
@@ -279,7 +289,6 @@ button:disabled { opacity:.55; cursor:not-allowed; }
 
 .hidden { display:none!important; }
 
-/* Экран загрузки */
 .loader-screen {
   position:fixed;
   inset:0;
@@ -432,6 +441,10 @@ button:disabled { opacity:.55; cursor:not-allowed; }
         </button>
       </form>
 
+      <button class="text-button" id="forgotPasswordButton" type="button">
+        Забыли пароль?
+      </button>
+
       <div class="social-login">
         <button class="social-button" id="googleLoginButton" type="button">
           <span class="google-icon">G</span>
@@ -452,6 +465,13 @@ button:disabled { opacity:.55; cursor:not-allowed; }
       <h2>Добро пожаловать!</h2>
       <p>Ты вошёл в свой Chatly ID.</p>
       <p id="accountEmail"></p>
+
+      <button class="action hidden" id="addPasswordButton" type="button">
+        Добавить пароль
+      </button>
+
+      <div class="status" id="accountStatus" aria-live="polite"></div>
+
       <button class="action" id="logoutButton" type="button">
         Выйти из аккаунта
       </button>
@@ -511,7 +531,8 @@ import {
   signOut,
   deleteUser,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 import {
@@ -557,10 +578,29 @@ function message(text, error = false) {
   $("status").classList.toggle("error", error);
 }
 
+function accountMessage(text, error = false) {
+  $("accountStatus").textContent = text;
+  $("accountStatus").classList.toggle("error", error);
+}
+
 function showAccount(user) {
   $("authPanel").classList.add("hidden");
   $("accountPanel").classList.remove("hidden");
+
   $("accountEmail").textContent = user.email || "Google-аккаунт";
+
+  const hasPassword = user.providerData.some(
+    provider => provider.providerId === "password"
+  );
+
+  const addPasswordButton = $("addPasswordButton");
+
+  addPasswordButton.classList.toggle(
+    "hidden",
+    hasPassword || !user.email
+  );
+
+  accountMessage("");
 }
 
 function showAuth() {
@@ -581,6 +621,11 @@ function setMode(next) {
 
   $("password").autocomplete =
     mode === "login" ? "current-password" : "new-password";
+
+  $("forgotPasswordButton").classList.toggle(
+    "hidden",
+    mode !== "login"
+  );
 
   message("");
 }
@@ -616,6 +661,12 @@ function readableError(error) {
       "Домен сайта не добавлен в Firebase Authorized domains.",
     "auth/account-exists-with-different-credential":
       "Этот Email уже используется другим способом входа. Попробуй войти прежним способом.",
+    "auth/user-not-found":
+      "Аккаунт с таким Email не найден.",
+    "auth/missing-email":
+      "Сначала введи Email.",
+    "auth/invalid-action-code":
+      "Ссылка недействительна или уже использована. Запроси новое письмо.",
     "permission-denied":
       "Firebase запретил операцию. Нужно проверить правила Firestore."
   };
@@ -798,13 +849,96 @@ $("googleLoginButton").onclick = async () => {
   }
 };
 
+/* Забыли пароль? */
+$("forgotPasswordButton").onclick = async () => {
+  if (!auth) {
+    message("Firebase не подключён.", true);
+    return;
+  }
+
+  const email = $("email").value.trim();
+
+  if (!email) {
+    message("Сначала введи свой Email в поле выше.", true);
+    $("email").focus();
+    return;
+  }
+
+  if (!$("email").checkValidity()) {
+    message("Проверь правильность Email.", true);
+    $("email").focus();
+    return;
+  }
+
+  const button = $("forgotPasswordButton");
+
+  button.disabled = true;
+  message("Отправляем письмо...");
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+
+    message(
+      "Если для этого Email доступен сброс пароля, письмо отправлено. Проверь входящие и папку «Спам»."
+    );
+
+  } catch (error) {
+    console.error("Password reset error:", error);
+    message(readableError(error), true);
+
+  } finally {
+    button.disabled = false;
+  }
+};
+
+/* Добавить пароль Google-аккаунту */
+$("addPasswordButton").onclick = async () => {
+  const user = auth?.currentUser;
+
+  if (!user || !user.email) {
+    accountMessage("Не удалось определить Email аккаунта.", true);
+    return;
+  }
+
+  const hasPassword = user.providerData.some(
+    provider => provider.providerId === "password"
+  );
+
+  if (hasPassword) {
+    accountMessage("У этого аккаунта уже есть пароль.");
+    $("addPasswordButton").classList.add("hidden");
+    return;
+  }
+
+  const button = $("addPasswordButton");
+
+  button.disabled = true;
+  accountMessage("Отправляем письмо для установки пароля...");
+
+  try {
+    await sendPasswordResetEmail(auth, user.email);
+
+    accountMessage(
+      "Письмо отправлено на " + user.email +
+      ". Открой его и перейди по ссылке, чтобы установить пароль. Проверь также папку «Спам»."
+    );
+
+  } catch (error) {
+    console.error("Add password error:", error);
+    accountMessage(readableError(error), true);
+
+  } finally {
+    button.disabled = false;
+  }
+};
+
 /* Выход */
 $("logoutButton").onclick = async () => {
   try {
     await signOut(auth);
     message("Ты вышел из аккаунта.");
   } catch (error) {
-    message(readableError(error), true);
+    accountMessage(readableError(error), true);
   }
 };
 </script>
